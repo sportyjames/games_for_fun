@@ -13,6 +13,14 @@ MOVE_DIRS = [(-1, -1), (-1, 0), (-1, 1),
 
 class Reversi():
     def __init__(self):
+        '''
+            Initialize the board:
+            1. initialize the 4 positions in the center of the board
+            2. initialize cur_turn to black
+            3. initialize opposite_turn to white 
+            4. initialize position to flip to empty list
+        '''
+
         self.board = [[' ' for _ in range(BOARD_COLS)]
                       for _ in range(BOARD_ROWS)]
 
@@ -26,9 +34,11 @@ class Reversi():
 
         self.position_to_flip = []
 
-        self.winner = ''
-
     def print_board(self):
+        '''
+            Print the board
+        '''
+
         print("    0   1   2   3   4   5   6   7")
         print("  +---+---+---+---+---+---+---+---+")
         c = 0
@@ -47,6 +57,10 @@ class Reversi():
             print("  +---+---+---+---+---+---+---+---+")
 
     def print_score(self):
+        '''
+            Print the score of the board
+        '''
+
         black_score = 0
         white_score = 0
 
@@ -60,25 +74,43 @@ class Reversi():
               ' | ' + 'W: ' + str(white_score))
 
     def print_turn(self):
+        '''
+            Print whose turn it is now
+        '''
+
         return self.cur_turn
 
     def is_valid_row(self, inputRow):
+        '''
+            Check if inputRow is within the board boundary
+        '''
+
         return 0 <= inputRow < BOARD_ROWS
 
     def is_valid_col(self, inputCol):
+        '''
+            Check if inputCol is within the board boundary
+        '''
+
         return 0 <= inputCol < BOARD_COLS
 
     def is_valid_move(self, inputRow, inputCol):
+        '''
+            Check if my current position is a valid move. 
+            If so, modify the self.position_to_flip and return True
+            If not, return False
+        '''
 
-        # check if there is an element already occupied or the input row and col are out of bound
+        # check if the input row and col are out of bound or if there is an element already occupied (the order of check is really important here)
         if not self.is_valid_row(inputRow) or not self.is_valid_col(inputCol) or self.board[inputRow][inputCol] != ' ':
+            # print('this is invalid')
             return False
 
         for dirX, dirY in MOVE_DIRS:
             newRow = inputRow + dirX
             newCol = inputCol + dirY
 
-            # check if current location is in-bound and is located at the opposite_turn
+            # check if current location is in bound and is located at the opposite_turn
             if self.is_valid_row(newRow) and self.is_valid_col(newCol) and self.board[newRow][newCol] == self.opposite_turn:
                 while self.board[newRow][newCol] == self.opposite_turn:
                     newRow += dirX
@@ -105,13 +137,16 @@ class Reversi():
                         # store the position to be flipped
                         self.position_to_flip.append([newRow, newCol])
 
-        # if None position to flip, return False
+        # if no position to flip, return False
         if len(self.position_to_flip) == 0:
             return False
         else:
             return True
 
     def make_move(self, inputRow, inputCol):
+        '''
+            place my current position on the board, while flipping all the positions between my initial position and my current position
+        '''
 
         if self.is_valid_move(inputRow, inputCol):
             # make flip all the positions along the way
@@ -137,40 +172,43 @@ class Reversi():
         '''
         self.position_to_flip = []
 
-    def is_game_over(self):
-        position_to_flip = []
+    def is_moveable(self):
+        '''
+            check if current turn is movable
+        '''
+
+        moveable = []
 
         for row in range(BOARD_ROWS):
             for column in range(BOARD_COLS):
                 if self.is_valid_move(row, column) != False:
-                    position_to_flip.append([row, column])
+                    # because is_valid_move will modify the position_to_flip
+                    self.position_to_flip = []
+                    moveable.append([row, column])
 
-        # print('position to flip is for ',
-        #       self.cur_turn, ' is ', position_to_flip)
+        print('movabale is for ', self.cur_turn, ' is ', moveable)
+        return len(moveable) != 0
 
-        # because is_valid_move will modify the position_to_flip
-        self.position_to_flip = []
+    def get_winner(self):
+        '''
+            get the winner of the game
+        '''
 
-        if len(position_to_flip) == 0:
-            # change cur_turn to a new_turn
-            self.change_turn()
-            for row in range(BOARD_ROWS):
-                for column in range(BOARD_COLS):
-                    if self.is_valid_move(row, col) != False:
-                        position_to_flip.append([row, column])
+        black_score = 0
+        white_score = 0
 
-            # print('position to flip is for ',
-            #       self.cur_turn, ' is ', position_to_flip)
-
-            # change new_turn back to cur_turn
-            self.change_turn()
-
-            # because is_valid_move will modify the position_to_flip
-            self.position_to_flip = []
-
-            return len(position_to_flip) == 0
-
-        return False
+        for row in self.board:
+            for column in row:
+                if column == 'B':
+                    black_score += 1
+                elif column == 'W':
+                    white_score += 1
+        if black_score > white_score:
+            return 'black'
+        elif black_score < white_score:
+            return 'white'
+        else:
+            return 'draw'
 
 
 game = Reversi()
@@ -181,6 +219,15 @@ while game_over == False:
     print()
     game.print_score()
     print('It is now ', game.print_turn(), ' turn')
+
+    if not game.is_moveable():
+        print(game.print_turn(), ' cannot move, so switch turn')
+        game.change_turn()
+        if not game.is_moveable():
+            print(game.print_turn(), ' cannot move either,so game is over')
+            game.print_score()
+            print('winner is ', game.get_winner())
+            break
 
     row = int(input("what is the row you want to enter? "))
     col = int(input("what is the col you want to enter? "))
@@ -196,7 +243,3 @@ while game_over == False:
     game.make_move(row, col)
     game.change_turn()
     game.reset_position_to_flip()
-
-    if game.is_game_over():
-        print('game over')
-        break
