@@ -71,7 +71,7 @@ class Reversi():
     def is_valid_move(self, inputRow, inputCol):
 
         # check if there is an element already occupied or the input row and col are out of bound
-        if self.board[inputRow][inputCol] != ' ' or not self.is_valid_row(inputRow) or not self.is_valid_col(inputCol):
+        if not self.is_valid_row(inputRow) or not self.is_valid_col(inputCol) or self.board[inputRow][inputCol] != ' ':
             return False
 
         for dirX, dirY in MOVE_DIRS:
@@ -145,13 +145,31 @@ class Reversi():
                 if self.is_valid_move(row, column) != False:
                     position_to_flip.append([row, column])
 
+        # print('position to flip is for ',
+        #       self.cur_turn, ' is ', position_to_flip)
+
+        # because is_valid_move will modify the position_to_flip
+        self.position_to_flip = []
+
         if len(position_to_flip) == 0:
+            # change cur_turn to a new_turn
             self.change_turn()
             for row in range(BOARD_ROWS):
                 for column in range(BOARD_COLS):
                     if self.is_valid_move(row, col) != False:
                         position_to_flip.append([row, column])
+
+            # print('position to flip is for ',
+            #       self.cur_turn, ' is ', position_to_flip)
+
+            # change new_turn back to cur_turn
+            self.change_turn()
+
+            # because is_valid_move will modify the position_to_flip
+            self.position_to_flip = []
+
             return len(position_to_flip) == 0
+
         return False
 
 
@@ -168,6 +186,7 @@ while game_over == False:
     col = int(input("what is the col you want to enter? "))
 
     while game.is_valid_move(row, col) == False:
+
         print("Invalid user move! Reenter the row and col!")
         print('It is now ', game.print_turn(), ' turn')
 
@@ -175,8 +194,9 @@ while game_over == False:
         col = int(input("what is the col you want to enter? "))
 
     game.make_move(row, col)
-    if game.is_game_over():
-        break
-
     game.change_turn()
     game.reset_position_to_flip()
+
+    if game.is_game_over():
+        print('game over')
+        break
