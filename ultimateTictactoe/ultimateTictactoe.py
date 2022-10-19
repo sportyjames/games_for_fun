@@ -51,7 +51,7 @@ class TicTacToeBoard:
 class LocalBoard(TicTacToeBoard):
     def __init__(self, index):
         TicTacToeBoard.__init__(self)
-        self.playable: bool = True
+        # self.playable: bool = True
         self.index: int = index
 
 
@@ -61,7 +61,7 @@ class LocalBoard(TicTacToeBoard):
 class GlobalBoard(TicTacToeBoard):
     def __init__(self):
         TicTacToeBoard.__init__(self)
-        # 3x3 grid of local boards
+        # a list of 9 local board
         self.local_board_list = [LocalBoard(i) for i in range(9)]
 
     def print_board(self):
@@ -85,7 +85,11 @@ class GlobalBoard(TicTacToeBoard):
 
     # 2. 算接下来的落点，检查该点可否放
     def isValid(self, row, col, index):
-        # todo: first check if current point is within a 3*3 grid that is won by a player
+        # first check if that board is playable
+        x = index // 3
+        y = index % 3
+        if self.board[x][y] != ' ':
+            return False
 
         # first check if that point is already occupied
         if self.local_board_list[index].board[row][col] != ' ':
@@ -97,9 +101,11 @@ class GlobalBoard(TicTacToeBoard):
     # 3. 放
     def makeMove(self, row, col, index, player):
         self.local_board_list[index].board[row][col] = player
-        # if small grid won, update my board
+        # if small grid won, update my board with the player_id
         if self.hasSmallGridWon(row, col, index, player):
-            self.board[row][col] = player
+            x = index // 3
+            y = index % 3
+            self.board[x][y] = player
 
     # 4. 放完检查是否赢(小grid 3x3)
     def hasSmallGridWon(self, row, col, index, player):
